@@ -6,9 +6,9 @@ It was increasingly cumbersome to eye-grep CF output in the AWS console. I could
 
 ## Requirements
 
-An AWS profile configured locally
-python 3.8+
-pipenv
+* An AWS profile configured locally
+* python 3.8+
+* pipenv
 
 ## Installation
 
