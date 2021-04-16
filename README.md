@@ -21,5 +21,5 @@ pipenv shell
 ## Example
 
 ```bash
-./cfplot.py stackname --profile your-profile-name
+./cfplot.py stackname --region us-east-1 --profile your-profile-name
 ```
