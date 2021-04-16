@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from inspect import stack
 import boto3
 import plotly.graph_objects as go
 import fire
