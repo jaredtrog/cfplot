@@ -25,3 +25,5 @@ pipenv shell
 ```bash
 ./cfplot.py stackname --region us-east-1 --profile your-profile-name
 ```
+
+![A picture is worth a thousand deployments](waterfall.png)
