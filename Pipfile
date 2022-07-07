@@ -5,6 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 autopep8 = "*"
+black = "*"
 
 [packages]
 plotly = "*"
@@ -14,3 +15,6 @@ fire = "*"
 
 [requires]
 python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
