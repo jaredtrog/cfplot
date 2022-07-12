@@ -167,7 +167,7 @@ def main(stackname: str, profile: str = "default", region: str = "us-east-2") ->
         plot_bgcolor="#FFF",
     )
     fig.update_xaxes(
-        title="Time in Seconds",
+        title="Event Duration",
         tickangle=-45,
         tickfont=dict(family="Open Sans, light", color="black", size=14),
     )
