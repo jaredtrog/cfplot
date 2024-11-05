@@ -428,6 +428,45 @@ def display_figure(fig, data, events, stackname):
         )
     )
     
+    for trace in fig.data:
+        # Create meaningful customdata for each bar segment
+        customdata = []
+        for i in range(len(trace.y[0])):
+            resource_type = "Resource"  # Default value
+            if hasattr(trace, 'increasing') and 'marker' in trace.increasing:
+                color = trace.increasing.marker.color
+                if color == COLORS["stack"]["main"]:
+                    resource_type = "Main Stack"
+                elif color == COLORS["stack"]["nested"]:
+                    resource_type = "Nested Stack"
+                elif color in COLORS["resource"].values():
+                    # Reverse lookup the resource category
+                    resource_type = next(
+                        (k.title() for k, v in COLORS["resource"].items() if v == color),
+                        "Resource"
+                    )
+            
+            duration = format_time_from_seconds(trace.x[i]) if trace.x[i] > 0 else "00:00:00"
+            start_time = format_time_from_seconds(trace.base)
+            end_time = format_time_from_seconds(trace.base + trace.x[i])
+            
+            customdata.append([
+                resource_type,
+                duration,
+                start_time,
+                end_time,
+                trace.y[1][i]  # Logical Resource ID
+            ])
+        
+        trace.customdata = customdata
+        trace.hovertemplate = (
+            "<b>%{customdata[4]}</b><br>" +  # Logical Resource ID
+            "Type: %{customdata[0]}<br>" +   # Resource Type
+            "Duration: %{customdata[1]}<br>" +
+            "Start: %{customdata[2]}<br>" +
+            "End: %{customdata[3]}<extra></extra>"
+        )
+    
     fig.update_xaxes(
         title="Event Duration (MM:SS)",
         tickangle=-45,
