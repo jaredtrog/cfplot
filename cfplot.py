@@ -379,12 +379,21 @@ def update_data_for_event(event, data):
             resource_data["duration_s2e"] = resource_data["end"] - resource_data["start"]
             resource_data["duration"] = resource_data["end"] - resource_data["identified"]
 
+def format_time_for_axis(seconds: float) -> str:
+    """
+    Format seconds into MM:SS format for axis labels
+    """
+    minutes, seconds = divmod(int(seconds), 60)
+    return f"{minutes:02}:{seconds:02}"
+
 def display_figure(fig, data, events, stackname):
-    total_time = format_time_from_seconds(data[stackname][stackname]["duration"].seconds)
+    # Calculate total duration in seconds from the first trace's base value
+    total_duration = max(trace.base + sum(trace.x) for trace in fig.data)
+    
     fig.update_layout(
         title={
             "text": f'<span style="color:#2C3E50">CloudFormation Waterfall - {stackname}<br />'
-                   f'<b>Total Time: {total_time}</b></span>',
+                   f'<b>Total Time: {format_time_from_seconds(int(total_duration))}</b></span>',
             "font": {"family": "Open Sans, light", "size": 20}
         },
         showlegend=False,
@@ -398,7 +407,13 @@ def display_figure(fig, data, events, stackname):
         xaxis=dict(
             gridcolor="#ECEFF1",
             zerolinecolor="#CFD8DC",
-            showgrid=True
+            showgrid=True,
+            tickmode="array",
+            # Generate ticks from 0 to total duration
+            tickvals=list(range(0, int(total_duration) + 30, 30)),  # Step by 30 seconds
+            ticktext=[format_time_for_axis(t) for t in range(0, int(total_duration) + 30, 30)],
+            range=[0, total_duration],  # Set explicit range
+            tickformat=None
         ),
         yaxis=dict(
             gridcolor="#ECEFF1",
@@ -414,7 +429,7 @@ def display_figure(fig, data, events, stackname):
     )
     
     fig.update_xaxes(
-        title="Event Duration",
+        title="Event Duration (MM:SS)",
         tickangle=-45,
         tickfont=DEFAULT_FONT
     )
