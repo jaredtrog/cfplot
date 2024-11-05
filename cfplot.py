@@ -13,6 +13,20 @@ SECONDS_IN_MINUTE = 60
 DEFAULT_PROFILE = "default"
 DEFAULT_REGION = "us-east-2"
 DEFAULT_FONT = {"family": "Open Sans, light", "color": "black", "size": 14}
+COLORS = {
+    "stack": {
+        "main": "#2E86C1",        # Strong blue for main stack
+        "nested": "#3498DB"       # Lighter blue for nested stacks
+    },
+    "resource": {
+        "compute": "#27AE60",     # Green for compute resources (EC2, Lambda)
+        "storage": "#8E44AD",     # Purple for storage (S3, EFS)
+        "network": "#E67E22",     # Orange for network resources
+        "security": "#C0392B",    # Red for security resources
+        "other": "#7F8C8D"        # Gray for other resources
+    },
+    "waiting": "#ECF0F1"          # Light gray for waiting periods
+}
 
 # Initialize a module-level logger
 logger = logging.getLogger("cfplot_logger")
@@ -30,6 +44,26 @@ def format_time_from_seconds(seconds: int) -> str:
     hours, remainder = divmod(seconds, SECONDS_IN_HOUR)
     minutes, seconds = divmod(remainder, SECONDS_IN_MINUTE)
     return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+def get_resource_category(resource_type: str) -> str:
+    """
+    Determine the category of a resource based on its type
+    """
+    compute_resources = {"AWS::EC2::", "AWS::Lambda::", "AWS::AutoScaling::"}
+    storage_resources = {"AWS::S3::", "AWS::EFS::", "AWS::DynamoDB::", "AWS::RDS::"}
+    network_resources = {"AWS::EC2::VPC", "AWS::EC2::Subnet", "AWS::EC2::RouteTable", 
+                        "AWS::EC2::SecurityGroup", "AWS::ElasticLoadBalancing::"}
+    security_resources = {"AWS::IAM::", "AWS::KMS::", "AWS::SecretsManager::"}
+    
+    if any(resource_type.startswith(r) for r in compute_resources):
+        return "compute"
+    elif any(resource_type.startswith(r) for r in storage_resources):
+        return "storage"
+    elif any(resource_type.startswith(r) for r in network_resources):
+        return "network"
+    elif any(resource_type.startswith(r) for r in security_resources):
+        return "security"
+    return "other"
 
 def get_stack_creation_events(stackname: str, cf_client) -> Tuple[List[Dict], Dict[str, str], datetime]:
     """
@@ -173,6 +207,10 @@ def construct_event_trace(start_time, data, event, is_total=False):
     """
     Construct waterfall trace for a single resource
     """
+    is_stack = event["ResourceType"] == "AWS::CloudFormation::Stack"
+    is_main_stack = is_stack and event["StackName"] == event["LogicalResourceId"]
+    resource_category = get_resource_category(event["ResourceType"])
+    
     trace = {
         "x": [],
         "y": [[], []],
@@ -180,9 +218,16 @@ def construct_event_trace(start_time, data, event, is_total=False):
         "textfont": DEFAULT_FONT,
         "textposition": "outside",
         "width": 0.8,
-        "base": (data["identified"] - start_time).seconds,  # Start from identification time
+        "base": (data["identified"] - start_time).seconds,
         "measure": [],
-        "increasing": {"marker": {"color": "LightBlue"}},
+        "increasing": {
+            "marker": {
+                "color": COLORS["stack"]["main"] if is_main_stack else
+                        COLORS["stack"]["nested"] if is_stack else
+                        COLORS["resource"][resource_category]
+            }
+        },
+        "decreasing": {"marker": {"color": COLORS["waiting"]}}
     }
     update_trace(event, trace, is_total, data)
     return trace
@@ -338,25 +383,42 @@ def display_figure(fig, data, events, stackname):
     total_time = format_time_from_seconds(data[stackname][stackname]["duration"].seconds)
     fig.update_layout(
         title={
-            "text": f'<span style="color:#000000">CloudFormation Waterfall - {stackname}<br /><b>Total Time: {total_time}</b></span>'
+            "text": f'<span style="color:#2C3E50">CloudFormation Waterfall - {stackname}<br />'
+                   f'<b>Total Time: {total_time}</b></span>',
+            "font": {"family": "Open Sans, light", "size": 20}
         },
         showlegend=False,
-        height=(len(events) * 10),
+        height=max(len(events) * 12, 600),  # Ensure minimum height
         font=DEFAULT_FONT,
-        plot_bgcolor="#FFF",
+        plot_bgcolor="#FFFFFF",
+        paper_bgcolor="#FFFFFF",
+        margin=dict(l=150, r=50, t=100, b=50),
+        xaxis=dict(
+            gridcolor="#ECEFF1",
+            zerolinecolor="#CFD8DC"
+        ),
+        yaxis=dict(
+            gridcolor="#ECEFF1",
+            zerolinecolor="#CFD8DC"
+        )
     )
     fig.update_xaxes(
         title="Event Duration",
         tickangle=-45,
         tickfont=DEFAULT_FONT,
+        showgrid=True
     )
     fig.update_yaxes(
         title="CloudFormation Resources",
         tickangle=0,
         tickfont=DEFAULT_FONT,
-        linecolor="#000",
+        linecolor="#2C3E50",
+        showgrid=True
     )
-    fig.update_traces(connector_visible=False)
+    fig.update_traces(
+        connector_visible=False,
+        textfont={"color": "#2C3E50"}
+    )
     fig.show()
 
 if __name__ == "__main__":
