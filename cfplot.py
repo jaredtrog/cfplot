@@ -217,7 +217,7 @@ def construct_event_trace(start_time, data, event, is_total=False):
         "text": [],
         "textfont": DEFAULT_FONT,
         "textposition": "outside",
-        "width": 0.8,
+        "width": 0.6,  # Reduced from 0.8 to create more spacing
         "base": (data["identified"] - start_time).seconds,
         "measure": [],
         "increasing": {
@@ -388,37 +388,51 @@ def display_figure(fig, data, events, stackname):
             "font": {"family": "Open Sans, light", "size": 20}
         },
         showlegend=False,
-        height=max(len(events) * 12, 600),  # Ensure minimum height
+        height=max(len(events) * 15, 600),
         font=DEFAULT_FONT,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
         margin=dict(l=150, r=50, t=100, b=50),
+        bargap=0.3,
+        bargroupgap=0.2,
         xaxis=dict(
             gridcolor="#ECEFF1",
-            zerolinecolor="#CFD8DC"
+            zerolinecolor="#CFD8DC",
+            showgrid=True
         ),
         yaxis=dict(
             gridcolor="#ECEFF1",
-            zerolinecolor="#CFD8DC"
+            zerolinecolor="#CFD8DC",
+            showgrid=True,
+            linecolor="#2C3E50",
+            autorange=True,
+            constrain="domain",
+            constraintoward="middle",
+            tickson="boundaries",
+            range=[-0.5, len(events) - 0.5]
         )
     )
+    
     fig.update_xaxes(
         title="Event Duration",
         tickangle=-45,
-        tickfont=DEFAULT_FONT,
-        showgrid=True
+        tickfont=DEFAULT_FONT
     )
+    
     fig.update_yaxes(
         title="CloudFormation Resources",
         tickangle=0,
-        tickfont=DEFAULT_FONT,
-        linecolor="#2C3E50",
-        showgrid=True
+        tickfont=DEFAULT_FONT
     )
+    
     fig.update_traces(
         connector_visible=False,
-        textfont={"color": "#2C3E50"}
+        textfont={"color": "#2C3E50"},
+        width=0.6,
+        alignmentgroup="resource",
+        offsetgroup="resource"
     )
+    
     fig.show()
 
 if __name__ == "__main__":
