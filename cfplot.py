@@ -397,13 +397,13 @@ def display_figure(fig, data, events, stackname):
             "font": {"family": "Open Sans, light", "size": 20}
         },
         showlegend=False,
-        height=max(len(events) * 15, 600),
+        height=max(len(events) * 8, 400),
         font=DEFAULT_FONT,
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
         margin=dict(l=150, r=50, t=100, b=50),
-        bargap=0.3,
-        bargroupgap=0.2,
+        bargap=0.15,
+        bargroupgap=0.1,
         xaxis=dict(
             gridcolor="#ECEFF1",
             zerolinecolor="#CFD8DC",
@@ -424,7 +424,9 @@ def display_figure(fig, data, events, stackname):
             constrain="domain",
             constraintoward="middle",
             tickson="boundaries",
-            range=[-0.5, len(events) - 0.5]
+            range=[-0.2, len(events) - 0.2]
+            # scaleanchor="x",  # Forces consistent scaling
+            # scaleratio=0.3    # Controls aspect ratio of the row
         )
     )
     
@@ -482,7 +484,7 @@ def display_figure(fig, data, events, stackname):
     fig.update_traces(
         connector_visible=False,
         textfont={"color": "#2C3E50"},
-        width=0.6,
+        width=0.6, # This affects how big the duration numbers appear. 0.4 is too small for > 100 resources.
         alignmentgroup="resource",
         offsetgroup="resource"
     )
